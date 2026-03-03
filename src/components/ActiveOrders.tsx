@@ -4,6 +4,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTimer } from "@/hooks/useTimer";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Order {
   id: string;
@@ -30,6 +34,7 @@ interface Order {
 interface ItemMap { [id: string]: string }
 
 const OrderCard = ({ order, itemName, onAction }: { order: Order; itemName: string; onAction: () => void }) => {
+  const [showEarlyCollect, setShowEarlyCollect] = useState(false);
   const currentEnd = order.current_session === 1 ? order.session1_end :
                      order.current_session === 2 ? order.session2_end : null;
   const { formatted, status, secondsLeft } = useTimer(currentEnd);
@@ -82,32 +87,65 @@ const OrderCard = ({ order, itemName, onAction }: { order: Order; itemName: stri
     onAction();
   };
 
+  const onCollectClick = () => {
+    if (secondsLeft !== null && secondsLeft > 0) {
+      setShowEarlyCollect(true);
+    } else {
+      handleCollect();
+    }
+  };
+
+  const isActive = order.status === "session1_active" || order.status === "session2_active";
+  const remainingMins = secondsLeft !== null ? Math.ceil(secondsLeft / 60) : 0;
+
   return (
-    <Card className={`${bgClass} border-border`}>
-      <CardContent className="p-4 space-y-3">
-        <div className="flex justify-between items-start">
-          <div>
-            <p className="font-display font-bold text-sm">{order.customer_name}</p>
-            <p className="text-xs text-muted-foreground">{itemName} • {order.session_count}S • {order.payment_mode}</p>
-            {order.table_number && <p className="text-xs text-muted-foreground">Table {order.table_number}</p>}
+    <>
+      <Card className={`${bgClass} border-border`}>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="font-display font-bold text-sm">{order.customer_name}</p>
+              <p className="text-xs text-muted-foreground">{itemName} • {order.session_count}S • {order.payment_mode}</p>
+              {order.table_number && <p className="text-xs text-muted-foreground">Table {order.table_number}</p>}
+            </div>
+            <div className="text-right">
+              <p className={`font-display text-2xl font-bold ${timerColor}`}>{formatted}</p>
+              <p className="text-xs text-muted-foreground">Session {order.current_session}/{order.session_count}</p>
+            </div>
           </div>
-          <div className="text-right">
-            <p className={`font-display text-2xl font-bold ${timerColor}`}>{formatted}</p>
-            <p className="text-xs text-muted-foreground">Session {order.current_session}/{order.session_count}</p>
-          </div>
-        </div>
-        {order.status === "confirmed" && (
-          <Button onClick={handleMarkReady} className="w-full gold-gradient text-primary-foreground font-bold">
-            🔥 MARK READY
-          </Button>
-        )}
-        {(order.status === "session1_active" || order.status === "session2_active") && secondsLeft !== null && secondsLeft <= 0 && (
-          <Button onClick={handleCollect} className="w-full bg-destructive text-destructive-foreground font-bold animate-pulse">
-            🫕 COLLECT POT
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+          {order.status === "confirmed" && (
+            <Button onClick={handleMarkReady} className="w-full gold-gradient text-primary-foreground font-bold">
+              🔥 MARK READY
+            </Button>
+          )}
+          {isActive && secondsLeft !== null && secondsLeft <= 0 && (
+            <Button onClick={handleCollect} className="w-full bg-destructive text-destructive-foreground font-bold animate-pulse">
+              🫕 COLLECT POT
+            </Button>
+          )}
+          {isActive && secondsLeft !== null && secondsLeft > 0 && (
+            <Button onClick={onCollectClick} variant="outline" className="w-full font-bold">
+              🫕 COLLECT EARLY
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={showEarlyCollect} onOpenChange={setShowEarlyCollect}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Collect Early?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ⚠️ There are still <strong>{remainingMins} minute{remainingMins !== 1 ? "s" : ""}</strong> remaining in this session. Are you sure you want to collect the pot early?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCollect}>Yes, Collect Now</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
