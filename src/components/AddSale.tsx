@@ -37,8 +37,8 @@ const AddSale = ({ onComplete }: { onComplete?: () => void }) => {
     const fetchData = async () => {
       const [{ data: itemsData }, { data: eventData }, { data: payData }] = await Promise.all([
         supabase.from("items").select("*").eq("is_active", true).order("name"),
-        supabase.from("events").select("id").eq("is_active", true).limit(1).single(),
-        supabase.from("app_config").select("value").eq("key", "payment_settings").single(),
+        supabase.from("events").select("id").eq("is_active", true).limit(1).maybeSingle(),
+        supabase.from("app_config").select("value").eq("key", "payment_settings").maybeSingle(),
       ]);
       if (itemsData) setItems(itemsData);
       if (eventData) setActiveEventId(eventData.id);

@@ -46,7 +46,7 @@ const Reports = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      const { data: ev } = await supabase.from("events").select("id, name").eq("is_active", true).limit(1).single();
+      const { data: ev } = await supabase.from("events").select("id, name").eq("is_active", true).limit(1).maybeSingle();
       if (ev) {
         setActiveEvent(ev);
         const { data } = await supabase.from("orders").select("*").eq("event_id", ev.id);

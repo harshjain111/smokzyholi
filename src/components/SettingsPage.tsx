@@ -49,12 +49,12 @@ const SettingsPage = () => {
   };
 
   const fetchTimerConfig = async () => {
-    const { data } = await supabase.from("timer_config").select("*").limit(1).single();
+    const { data } = await supabase.from("timer_config").select("*").limit(1).maybeSingle();
     if (data) setTimerCfg(data);
   };
 
   const fetchPaymentConfig = async () => {
-    const { data } = await supabase.from("app_config").select("value").eq("key", "payment_settings").single();
+    const { data } = await supabase.from("app_config").select("value").eq("key", "payment_settings").maybeSingle();
     if (data?.value) {
       const v = data.value as { cash_enabled?: boolean; upi_enabled?: boolean; upi_id?: string };
       setPaymentCfg({ cash_enabled: v.cash_enabled ?? true, upi_enabled: v.upi_enabled ?? true, upi_id: v.upi_id ?? "" });
@@ -84,7 +84,7 @@ const SettingsPage = () => {
   };
 
   const savePaymentConfig = async () => {
-    const { data: existing } = await supabase.from("app_config").select("id").eq("key", "payment_settings").single();
+    const { data: existing } = await supabase.from("app_config").select("id").eq("key", "payment_settings").maybeSingle();
     if (existing) {
       await supabase.from("app_config").update({ value: paymentCfg as any }).eq("key", "payment_settings");
     } else {
