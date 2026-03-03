@@ -47,7 +47,7 @@ const OrderCard = ({ order, itemName, onAction }: { order: Order; itemName: stri
 
   const handleMarkReady = async () => {
     const now = new Date().toISOString();
-    const { data: cfg } = await supabase.from("timer_config").select("default_duration_mins").limit(1).single();
+    const { data: cfg } = await supabase.from("timer_config").select("default_duration_mins").limit(1).maybeSingle();
     const duration = cfg?.default_duration_mins ?? 45;
     const end = new Date(Date.now() + duration * 60 * 1000).toISOString();
     await supabase.from("orders").update({
@@ -61,7 +61,7 @@ const OrderCard = ({ order, itemName, onAction }: { order: Order; itemName: stri
     const delay = currentEnd ? Math.max(0, Math.round((Date.now() - new Date(currentEnd).getTime()) / 60000)) : 0;
     if (order.current_session === 1) {
       if (order.session_count === 2) {
-        const { data: cfg } = await supabase.from("timer_config").select("default_duration_mins").limit(1).single();
+        const { data: cfg } = await supabase.from("timer_config").select("default_duration_mins").limit(1).maybeSingle();
         const duration = cfg?.default_duration_mins ?? 45;
         const end2 = new Date(Date.now() + duration * 60 * 1000).toISOString();
         await supabase.from("orders").update({
@@ -116,7 +116,7 @@ const ActiveOrders = () => {
   const [itemMap, setItemMap] = useState<ItemMap>({});
 
   const fetchOrders = useCallback(async () => {
-    const { data: eventData } = await supabase.from("events").select("id").eq("is_active", true).limit(1).single();
+    const { data: eventData } = await supabase.from("events").select("id").eq("is_active", true).limit(1).maybeSingle();
     if (!eventData) { setOrders([]); return; }
     const { data } = await supabase.from("orders").select("*")
       .eq("event_id", eventData.id)
