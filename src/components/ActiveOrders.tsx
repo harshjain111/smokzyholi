@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTimer } from "@/hooks/useTimer";
+import TimerExpiredAlert from "@/components/TimerExpiredAlert";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -39,11 +40,7 @@ const OrderCard = ({ order, itemName, onAction }: { order: Order; itemName: stri
                      order.current_session === 2 ? order.session2_end : null;
   const { formatted, status, secondsLeft } = useTimer(currentEnd);
 
-  useEffect(() => {
-    if (secondsLeft !== null && secondsLeft === 0) {
-      try { navigator.vibrate?.([500, 200, 500, 200, 500]); } catch {}
-    }
-  }, [secondsLeft]);
+  // Vibration is now handled by the global TimerExpiredAlert
 
   const bgClass = status === "red" ? "timer-pulse-red" : "";
   const timerColor = status === "green" ? "text-[hsl(var(--timer-green))]" :
@@ -152,6 +149,7 @@ const OrderCard = ({ order, itemName, onAction }: { order: Order; itemName: stri
 const ActiveOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [itemMap, setItemMap] = useState<ItemMap>({});
+  const [expiredOrders, setExpiredOrders] = useState<Order[]>([]);
 
   const fetchOrders = useCallback(async () => {
     const { data: eventData } = await supabase.from("events").select("id").eq("is_active", true).limit(1).maybeSingle();
@@ -162,6 +160,56 @@ const ActiveOrders = () => {
       .order("created_at", { ascending: true });
     if (data) setOrders(data);
   }, []);
+
+  // Track expired orders for the global alert
+  useEffect(() => {
+    const checkExpired = () => {
+      const now = Date.now();
+      const expired = orders.filter((o) => {
+        const isActive = o.status === "session1_active" || o.status === "session2_active";
+        if (!isActive) return false;
+        const endTime = o.current_session === 1 ? o.session1_end :
+                        o.current_session === 2 ? o.session2_end : null;
+        if (!endTime) return false;
+        return new Date(endTime).getTime() <= now;
+      });
+      setExpiredOrders(expired);
+    };
+    checkExpired();
+    const interval = setInterval(checkExpired, 1000);
+    return () => clearInterval(interval);
+  }, [orders]);
+
+  const handleCollectFromAlert = async (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return;
+    const now = new Date().toISOString();
+    const endTime = order.current_session === 1 ? order.session1_end :
+                    order.current_session === 2 ? order.session2_end : null;
+    const delay = endTime ? Math.max(0, Math.round((Date.now() - new Date(endTime).getTime()) / 60000)) : 0;
+
+    if (order.current_session === 1) {
+      if (order.session_count === 2) {
+        const { data: cfg } = await supabase.from("timer_config").select("default_duration_mins").limit(1).maybeSingle();
+        const duration = cfg?.default_duration_mins ?? 45;
+        const end2 = new Date(Date.now() + duration * 60 * 1000).toISOString();
+        await supabase.from("orders").update({
+          session1_collected: now, session1_delay_mins: delay,
+          current_session: 2, status: "session2_active", session2_start: now, session2_end: end2,
+        }).eq("id", orderId);
+      } else {
+        await supabase.from("orders").update({
+          session1_collected: now, session1_delay_mins: delay, status: "closed",
+        }).eq("id", orderId);
+      }
+    } else if (order.current_session === 2) {
+      await supabase.from("orders").update({
+        session2_collected: now, session2_delay_mins: delay, status: "closed",
+      }).eq("id", orderId);
+    }
+    toast.success("Pot collected! ✅");
+    fetchOrders();
+  };
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -183,13 +231,16 @@ const ActiveOrders = () => {
   }, [fetchOrders]);
 
   return (
-    <div className="space-y-3">
-      <h2 className="font-display text-xl font-bold">Active Orders ({orders.length})</h2>
-      {orders.length === 0 && <p className="text-center text-muted-foreground py-8">No active orders</p>}
-      {orders.map((o) => (
-        <OrderCard key={o.id} order={o} itemName={itemMap[o.item_id] || "Unknown"} onAction={fetchOrders} />
-      ))}
-    </div>
+    <>
+      <TimerExpiredAlert expiredOrders={expiredOrders} onCollect={handleCollectFromAlert} />
+      <div className="space-y-3">
+        <h2 className="font-display text-xl font-bold">Active Orders ({orders.length})</h2>
+        {orders.length === 0 && <p className="text-center text-muted-foreground py-8">No active orders</p>}
+        {orders.map((o) => (
+          <OrderCard key={o.id} order={o} itemName={itemMap[o.item_id] || "Unknown"} onAction={fetchOrders} />
+        ))}
+      </div>
+    </>
   );
 };
 
