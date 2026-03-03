@@ -83,7 +83,7 @@ const Reports = () => {
 
   // Delay stats
   const delays = orders
-    .filter((o) => o.status === "completed")
+    .filter((o) => o.status === "closed")
     .flatMap((o) => [o.session1_delay_mins, o.session2_delay_mins])
     .filter((d): d is number => d !== null);
   const onTime = delays.filter((d) => d <= 0).length;

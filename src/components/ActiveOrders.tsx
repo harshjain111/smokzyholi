@@ -75,12 +75,12 @@ const OrderCard = ({ order, itemName, onAction }: { order: Order; itemName: stri
         }).eq("id", order.id);
       } else {
         await supabase.from("orders").update({
-          session1_collected: now, session1_delay_mins: delay, status: "completed",
+          session1_collected: now, session1_delay_mins: delay, status: "closed",
         }).eq("id", order.id);
       }
     } else if (order.current_session === 2) {
       await supabase.from("orders").update({
-        session2_collected: now, session2_delay_mins: delay, status: "completed",
+        session2_collected: now, session2_delay_mins: delay, status: "closed",
       }).eq("id", order.id);
     }
     toast.success("Pot collected! ✅");
@@ -158,7 +158,7 @@ const ActiveOrders = () => {
     if (!eventData) { setOrders([]); return; }
     const { data } = await supabase.from("orders").select("*")
       .eq("event_id", eventData.id)
-      .neq("status", "completed")
+      .neq("status", "closed")
       .order("created_at", { ascending: true });
     if (data) setOrders(data);
   }, []);
