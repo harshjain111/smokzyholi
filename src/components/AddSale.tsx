@@ -69,7 +69,7 @@ const AddSale = ({ onComplete }: { onComplete?: () => void }) => {
       item_id: selectedItem.id,
       session_count: sessionCount,
       price,
-      payment_mode: paymentMode,
+      payment_mode: paymentMode.toLowerCase(),
       event_id: activeEventId,
       created_by: staffName,
       status: "confirmed",
