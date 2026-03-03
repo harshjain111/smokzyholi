@@ -181,8 +181,8 @@ const AddSale = ({ onComplete }: { onComplete?: () => void }) => {
               </div>
             </CardContent>
           </Card>
-          <Button onClick={handleConfirm} disabled={loading} className="w-full gold-gradient text-primary-foreground py-6 text-lg font-bold">
-            {loading ? "Creating..." : "✅ CONFIRM PAYMENT"}
+          <Button onClick={handleConfirm} disabled={loading} className={`w-full py-6 text-lg font-bold ${paymentMode === "due" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "gold-gradient text-primary-foreground"}`}>
+            {loading ? "Creating..." : paymentMode === "due" ? "⏳ CONFIRM DUE PAYMENT" : "✅ CONFIRM PAYMENT"}
           </Button>
           <Button variant="secondary" onClick={() => setStep("payment")} className="w-full">← Back</Button>
         </div>
