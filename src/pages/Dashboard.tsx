@@ -6,8 +6,9 @@ import SettingsPage from "@/components/SettingsPage";
 import AddSale from "@/components/AddSale";
 import ActiveOrders from "@/components/ActiveOrders";
 import Reports from "@/components/Reports";
+import OrdersPage from "@/components/OrdersPage";
 
-type View = "home" | "active" | "sale" | "reports" | "settings" | "events";
+type View = "home" | "active" | "sale" | "reports" | "settings" | "events" | "orders";
 
 const Dashboard = () => {
   const { role, staffName, logout, isAdmin } = useAuth();
@@ -17,6 +18,7 @@ const Dashboard = () => {
     switch (view) {
       case "active": return <ActiveOrders />;
       case "sale": return <AddSale onComplete={() => setView("active")} />;
+      case "orders": return <OrdersPage />;
       case "reports": return <Reports />;
       case "settings": return <SettingsPage />;
       case "events": return <EventManager />;
@@ -47,6 +49,7 @@ const Dashboard = () => {
         <nav className="grid grid-cols-2 gap-3 p-4">
           <NavCard title="Active Orders" emoji="🔥" onClick={() => setView("active")} />
           <NavCard title="Add Sale" emoji="➕" onClick={() => setView("sale")} />
+          <NavCard title="All Orders" emoji="📋" onClick={() => setView("orders")} />
           <NavCard title="Reports" emoji="📊" onClick={() => setView("reports")} />
           {isAdmin && <NavCard title="Settings" emoji="⚙️" onClick={() => setView("settings")} />}
           {isAdmin && <NavCard title="Events" emoji="📅" onClick={() => setView("events")} />}
