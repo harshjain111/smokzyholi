@@ -1,73 +1,71 @@
-## Hookah Stall Sales Manager – PWA Implementation Plan
 
-### Overview
 
-A mobile-first PWA with bright minimal, corporate theme for managing hookah sales at events. Cloud-backed with Supabase, PIN-based access for speed, optimized for tablet use by 3-5 staff.
+## Fix & Build All Remaining Phases
 
----
+### Issue: "Invalid PIN" / "Failed to fetch"
+The edge function works correctly when called directly (tested both PINs successfully). The client-side call fails because the CORS `Access-Control-Allow-Headers` is missing headers the Supabase JS client sends (`x-supabase-client-platform`, etc.). Fix: update the CORS headers in the edge function.
 
-### Phase 1: Foundation & Theme
+### Implementation Plan
 
-- Set up PWA (vite-plugin-pwa, manifest, icons, offline caching)
-- Black & gold design system with large touch-friendly buttons
-- Tablet-portrait-optimized layout
+**1. Fix CORS in `validate-pin` edge function**
+- Add missing headers to `Access-Control-Allow-Headers`: `x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version`
 
-### Phase 2: Backend (Supabase Cloud)
+**2. Database: Add INSERT/UPDATE policies for admin-managed tables**
+- `events`: allow INSERT, UPDATE, DELETE (all public since no Supabase Auth)
+- `items`: allow INSERT, UPDATE
+- `timer_config`: allow INSERT, UPDATE
+- `app_config`: allow INSERT, UPDATE
+- `deletion_log`: allow INSERT
 
-- **Tables**: `events`, `items`, `orders`, `timer_config`, `app_config` (PINs, UPI settings, payment modes)
-- **RLS policies**: Admin PIN validated server-side; staff limited to order creation & viewing
-- Orders are immutable after confirmation (no update/delete policies for staff)
+**3. Phase 4 — Event Management (Admin)**
+- New component `EventManager.tsx`: create/edit events with name, date, start/end time
+- Toggle active event (only one active at a time)
+- Linked from Dashboard "Events" nav card
 
-### Phase 3: PIN-Based Login
+**4. Phase 5 — Settings Page (Admin, hidden from Staff)**
+- `SettingsPage.tsx` with three tabs:
+  - **Items**: Add/edit items (name, 1-session price, 2-session price, default duration)
+  - **Timer Config**: Default duration, Reminder 1 & 2, Escalation time (per event)
+  - **Payment Settings**: Enable/disable Cash/UPI, configure UPI ID
 
-- Simple PIN entry screen (large numpad, gold buttons)
-- Admin PIN → full access; Staff PIN → limited access
-- PINs stored securely in `app_config` table, validated via edge function
-- Session stored in memory (no localStorage for security)
+**5. Phase 6 — Order Creation (Staff + Admin)**
+- `AddSale.tsx`: Step-by-step form
+  - Customer name, number (required), table/pot number (optional)
+  - Item selection (large buttons)
+  - Session type (1 or 2) with auto-calculated price
+  - Payment mode (Cash/UPI)
+  - CONFIRM PAYMENT button — creates locked order
 
-### Phase 4: Admin – Event Management
+**6. Phase 7 & 8 — Active Orders + Session Timer System**
+- `ActiveOrders.tsx`: Live order cards with countdown timers
+- Color-coded: green (>10min), orange (<10min), red flashing (expired)
+- MARK READY → starts session 1 timer
+- Full-screen alert + vibration on session end → COLLECT POT button
+- For 2-session: flow to session 2 automatically
+- Realtime subscription for cross-device sync
+- Custom `useTimer` hook for countdown logic
 
-- Create/edit events (name, date, start/end time)
-- Only one active event at a time
-- All orders auto-linked to active event
+**7. Phase 9 — Reports Dashboard**
+- `Reports.tsx`: Summary cards + breakdowns
+  - Total sales, cash vs UPI, order counts, 1-session vs 2-session
+  - Item-wise & staff-wise breakdown
+  - On-time vs late collection %, average delay
+  - Staff: read-only; Admin: full access
 
-### Phase 5: Admin – Settings Page (hidden from staff)
+**8. Phase 10 — Excel Export & Data Protection (Admin)**
+- Install `xlsx` package
+- Export all order fields to Excel
+- Event deletion flow: generate backup → download confirm → final confirm → log deletion
+- Deletion logged to `deletion_log` table
 
-- **Item Management**: Add/edit items (name, 1-session price, 2-session price, default duration)
-- **Timer Config**: Default duration, Reminder 1, Reminder 2, Escalation time (per event)
-- **Payment Settings**: Enable/disable Cash & UPI, configure UPI ID
+**9. Dashboard Navigation**
+- Wire all NavCards to show corresponding views (using state-based navigation, no router needed)
+- Add back-button navigation pattern
 
-### Phase 6: Order Creation Flow (Staff)
+### Technical Details
+- All views managed via state in `Dashboard.tsx` (active view pattern)
+- Supabase realtime on `orders` table for live updates
+- Timer logic uses `setInterval` with 1-second ticks, reading from `timer_config`
+- Vibration API (`navigator.vibrate`) for alerts
+- All database writes go through Supabase client with public RLS policies (since no Supabase Auth is used)
 
-- "ADD SALE" → form with customer name, number, table #, pot #
-- Large item selection buttons → session type (1 or 2) → auto-calculated price
-- Payment mode selection (Cash/UPI) → **CONFIRM PAYMENT** button
-- Order locked after confirmation – no edits possible
-
-### Phase 7: Session Timer System (Core Feature)
-
-- Countdown timer per order with color coding (green → orange → red flashing)
-- **MARK READY** → starts session 1 timer
-- Full-screen alert + vibration when session ends → **COLLECT POT** button
-- Records collection time & delay minutes
-- For 2-session orders: automatic flow to session 2 with same timer logic
-- Real-time auto-refresh across devices via Supabase realtime subscriptions
-
-### Phase 8: Active Orders Dashboard
-
-- Live order cards showing: customer, item, session info, large countdown timer
-- Color-coded status (green/orange/red flashing)
-- Bold, highly visible – no unnecessary scrolling
-
-### Phase 9: Reports Dashboard
-
-- Total sales, cash vs UPI breakdown, order counts, session type counts
-- Item-wise & staff-wise breakdown
-- On-time vs late collection %, average delay
-- Staff: read-only view; Admin: full access
-
-### Phase 10: Excel Export & Data Protection
-
-- Excel export with all order fields (using xlsx library)
-- Admin event deletion requires: generate backup → download confirmation → final confirm
-- Deletion logging
