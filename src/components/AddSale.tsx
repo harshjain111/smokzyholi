@@ -61,6 +61,7 @@ const AddSale = ({ onComplete }: { onComplete?: () => void }) => {
     if (!activeEventId) { toast.error("No active event"); return; }
     if (!selectedItem) return;
     setLoading(true);
+    const isDue = paymentMode.toLowerCase() === "due";
     const { error } = await supabase.from("orders").insert({
       customer_name: customerName,
       customer_number: customerNumber,
@@ -69,7 +70,8 @@ const AddSale = ({ onComplete }: { onComplete?: () => void }) => {
       item_id: selectedItem.id,
       session_count: sessionCount,
       price,
-      payment_mode: paymentMode.toLowerCase(),
+      payment_mode: isDue ? "due" : paymentMode.toLowerCase(),
+      payment_due: isDue,
       event_id: activeEventId,
       created_by: staffName,
       status: "confirmed",
@@ -153,6 +155,11 @@ const AddSale = ({ onComplete }: { onComplete?: () => void }) => {
               </button>
             ))}
           </div>
+          <button onClick={() => { setPaymentMode("due"); setStep("confirm"); }}
+            className="w-full flex items-center justify-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive transition-all active:scale-95 hover:bg-destructive/20">
+            <span className="text-2xl">⏳</span>
+            <span className="font-display font-semibold uppercase">Payment Due</span>
+          </button>
           <Button variant="secondary" onClick={() => setStep("session")}>← Back</Button>
         </div>
       )}

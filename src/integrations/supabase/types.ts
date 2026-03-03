@@ -141,6 +141,7 @@ export type Database = {
           event_id: string
           id: string
           item_id: string
+          payment_due: boolean
           payment_mode: string
           pot_number: string | null
           price: number
@@ -166,6 +167,7 @@ export type Database = {
           event_id: string
           id?: string
           item_id: string
+          payment_due?: boolean
           payment_mode: string
           pot_number?: string | null
           price: number
@@ -191,6 +193,7 @@ export type Database = {
           event_id?: string
           id?: string
           item_id?: string
+          payment_due?: boolean
           payment_mode?: string
           pot_number?: string | null
           price?: number
