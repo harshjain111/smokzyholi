@@ -1,0 +1,17 @@
+{
+  "name": "Smokzy Sales Manager",
+  "short_name": "Smokzy",
+  "description": "Hookah stall sales & session management",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121212",
+  "theme_color": "#D4A017",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
