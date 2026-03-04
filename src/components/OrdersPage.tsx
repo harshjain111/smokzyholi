@@ -147,7 +147,7 @@ const OrdersPage = () => {
                   {o.pot_number && <span className="text-xs text-muted-foreground">Pot {o.pot_number}</span>}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {itemMap[o.item_id] || "Unknown"} • {o.session_count}S • ₹{o.price} • {o.payment_mode.toUpperCase()}
+                  {itemMap[o.item_id] || "Unknown"} • {o.session_count}S • ₹{o.price} • {o.payment_mode === "cover_slip" ? "COVER SLIP" : o.payment_mode.toUpperCase()}
                 </p>
               </div>
               <div className="flex items-center gap-2 ml-2">
@@ -175,7 +175,7 @@ const OrdersPage = () => {
                 <Detail label="Item" value={itemMap[selectedOrder.item_id] || "Unknown"} />
                 <Detail label="Sessions" value={`${selectedOrder.session_count}`} />
                 <Detail label="Price" value={`₹${selectedOrder.price}`} />
-                <Detail label="Payment" value={selectedOrder.payment_mode.toUpperCase()} />
+                <Detail label="Payment" value={selectedOrder.payment_mode === "cover_slip" ? "🎫 Cover Slip" : selectedOrder.payment_mode.toUpperCase()} />
                 <Detail label="Status" value={statusLabel(selectedOrder.status)} />
                 <Detail label="Created By" value={selectedOrder.created_by} />
                 {selectedOrder.table_number && <Detail label="Table" value={selectedOrder.table_number} />}

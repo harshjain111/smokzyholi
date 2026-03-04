@@ -180,7 +180,7 @@ const AddSale = ({ onComplete }: { onComplete?: () => void }) => {
               {potNumber && <div className="flex justify-between"><span className="text-muted-foreground">Pot</span><span>{potNumber}</span></div>}
               <div className="flex justify-between"><span className="text-muted-foreground">Item</span><span>{selectedItem.name}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Sessions</span><span>{sessionCount}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Payment</span><span>{paymentMode}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Payment</span><span>{paymentMode === "cover_slip" ? "🎫 Cover Slip" : paymentMode === "due" ? "⏳ Due" : paymentMode}</span></div>
               <div className="flex justify-between border-t border-border pt-2 font-bold text-lg">
                 <span>Total</span><span className="gold-text">₹{price}</span>
               </div>

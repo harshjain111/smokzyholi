@@ -101,7 +101,7 @@ const OrderCard = ({ order, itemName, onAction }: { order: Order; itemName: stri
           <div className="flex justify-between items-start">
             <div>
               <p className="font-display font-bold text-sm">{order.customer_name}</p>
-              <p className="text-xs text-muted-foreground">{itemName} • {order.session_count}S • {order.payment_mode}</p>
+              <p className="text-xs text-muted-foreground">{itemName} • {order.session_count}S • {order.payment_mode === "cover_slip" ? "Cover Slip" : order.payment_mode}</p>
               {order.table_number && <p className="text-xs text-muted-foreground">Table {order.table_number}</p>}
             </div>
             <div className="text-right">
