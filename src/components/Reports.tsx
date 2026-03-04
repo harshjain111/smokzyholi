@@ -63,8 +63,9 @@ const Reports = () => {
   }, []);
 
   const totalSales = orders.reduce((s, o) => s + Number(o.price), 0);
-  const cashSales = orders.filter((o) => o.payment_mode === "Cash").reduce((s, o) => s + Number(o.price), 0);
-  const upiSales = orders.filter((o) => o.payment_mode === "UPI").reduce((s, o) => s + Number(o.price), 0);
+  const cashSales = orders.filter((o) => o.payment_mode === "Cash" || o.payment_mode === "cash").reduce((s, o) => s + Number(o.price), 0);
+  const upiSales = orders.filter((o) => o.payment_mode === "UPI" || o.payment_mode === "upi").reduce((s, o) => s + Number(o.price), 0);
+  const coverSlipSales = orders.filter((o) => o.payment_mode === "cover_slip").reduce((s, o) => s + Number(o.price), 0);
   const session1Count = orders.filter((o) => o.session_count === 1).length;
   const session2Count = orders.filter((o) => o.session_count === 2).length;
 
@@ -137,6 +138,7 @@ const Reports = () => {
         <StatCard label="Orders" value={orders.length} />
         <StatCard label="Cash" value={`₹${cashSales}`} />
         <StatCard label="UPI" value={`₹${upiSales}`} />
+        <StatCard label="Cover Slip" value={`₹${coverSlipSales}`} />
         <StatCard label="1-Session" value={session1Count} />
         <StatCard label="2-Session" value={session2Count} />
       </div>

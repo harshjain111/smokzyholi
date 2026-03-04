@@ -155,6 +155,11 @@ const AddSale = ({ onComplete }: { onComplete?: () => void }) => {
               </button>
             ))}
           </div>
+          <button onClick={() => { setPaymentMode("cover_slip"); setStep("confirm"); }}
+            className="w-full flex items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 p-4 text-primary transition-all active:scale-95 hover:bg-primary/20">
+            <span className="text-2xl">🎫</span>
+            <span className="font-display font-semibold uppercase">Cover Slip</span>
+          </button>
           <button onClick={() => { setPaymentMode("due"); setStep("confirm"); }}
             className="w-full flex items-center justify-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive transition-all active:scale-95 hover:bg-destructive/20">
             <span className="text-2xl">⏳</span>
@@ -181,8 +186,8 @@ const AddSale = ({ onComplete }: { onComplete?: () => void }) => {
               </div>
             </CardContent>
           </Card>
-          <Button onClick={handleConfirm} disabled={loading} className={`w-full py-6 text-lg font-bold ${paymentMode === "due" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "gold-gradient text-primary-foreground"}`}>
-            {loading ? "Creating..." : paymentMode === "due" ? "⏳ CONFIRM DUE PAYMENT" : "✅ CONFIRM PAYMENT"}
+          <Button onClick={handleConfirm} disabled={loading} className={`w-full py-6 text-lg font-bold ${paymentMode === "due" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : paymentMode === "cover_slip" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "gold-gradient text-primary-foreground"}`}>
+            {loading ? "Creating..." : paymentMode === "due" ? "⏳ CONFIRM DUE PAYMENT" : paymentMode === "cover_slip" ? "🎫 CONFIRM COVER SLIP" : "✅ CONFIRM PAYMENT"}
           </Button>
           <Button variant="secondary" onClick={() => setStep("payment")} className="w-full">← Back</Button>
         </div>
